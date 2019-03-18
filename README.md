@@ -19,11 +19,12 @@ SMV:
 
 <li> Smokeview Revision: SMV6.7.5-0-g92555b8-dirty
 
-</body>
-</html>
 
-Quickstart:
+Quickstart:<br>
 Because WFDS and SMV are written in compiled languages(Fortran, C) FireScape-Rx does not provide a pre-packaged versions of either.
 
 However, once one has access to compiled versions, users may point FireScape-Rx to the respective executables.
 This may be achieved via the user settings, found under the 'settings' menu in the main menu bar.
+
+</body>
+</html>
