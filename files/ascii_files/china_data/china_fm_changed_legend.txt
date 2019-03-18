@@ -1,0 +1,3 @@
+90s; road -> -1; no data
+6; big tall hot burning shrub | 8, 9, 10; forests -> 1; untreated 
+30s, 40s; shrubs | 1s, 2s; grass -> 2; treated 

@@ -1,0 +1,6 @@
+*.ini
+*.sim_settings
+
+.idea
+__pycache__
+temp
