@@ -1,2 +1,2 @@
 # FireScapeRx-release
-Development repository for FireScape Rx
+Release repository for FireScape Rx
