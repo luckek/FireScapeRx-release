@@ -1,0 +1,3 @@
+4/8 Version 0.0.2e notes:
+    - Several 'hacks' have been made throughout the AsciiToFds portion of the software to accomadate the test case,
+    these need to be reverted

@@ -1,0 +1,9 @@
+?/? Version 0.0.1e experimental beta release
+
+4/8 Version 0.0.2e changes:
+    - 3D visualization now fully functional
+    - Optimized map editors
+    - Simplified ignition point interface
+    - Simplified selection of wind direction
+    - Optimized WFDS script output
+    - Simplified WFDS fuels definitions in script (taken from 'input_C064_LS4_SHF.fds'
