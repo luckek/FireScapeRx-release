@@ -16,29 +16,29 @@ class AsciiToFds:
         self._nrows = fuel_map.nrows
         self._ncols = fuel_map.ncols
 
-        no_data = self._dem.no_data_val
+        # no_data = self._dem.no_data_val
 
         dat_table = self._dem.data_table
 
         # TODO: ###handle 'no data' values###
 
         # NOTE: we replace NO_DATA values with inf here so that we may properly calculate the table minimum
-        dat_table[dat_table == no_data] = np.inf
+        # dat_table[dat_table == no_data] = np.inf
 
         # One liner to get max and min of data table
-        tbl_min = dat_table.min()
+        # tbl_min = dat_table.min()
 
         # Re assign no data values
-        dat_table[dat_table == np.inf] = no_data
+        # dat_table[dat_table == np.inf] = no_data
 
         # This 'zeroes out' elevation so the lowest elevation is 0 m.
         # NOTE: We do this even when tbl_min = 0.0 so that the elevation values are rounded
         # TODO: can't round inf...
-        dat_table -= tbl_min
+        # dat_table -= tbl_min
         np.round(dat_table)
 
         # Round to nearest tens
-        self._tbl_max = round(dat_table.max(), -1)
+        # self._tbl_max = round(dat_table.max(), -1)
 
         # FIXME:
         #self._spatial_translator = SpatialTranslator(fuel_map)
@@ -79,9 +79,8 @@ class AsciiToFds:
         new_fds_file.time = self._sim_settings.sim_duration
         new_fds_file.ambient_temp = self._sim_settings.ambient_temp
 
-        u0, v0 = self._sim_settings.wind_vector()
-        new_fds_file.u0 = u0
-        new_fds_file.v0 = v0
+        new_fds_file.wind_vel = self._sim_settings.wind_vel
+        new_fds_file.wind_dir = self._sim_settings.wind_direction
 
         new_fds_file.cell_size = fuel_map.cell_size
 
@@ -92,7 +91,10 @@ class AsciiToFds:
         new_fds_file.y_end = fuel_map.y_max()
 
         new_fds_file.z_start = 0  # This should always be true, because we subtract min from DEM table
-        new_fds_file.z_end = self._tbl_max + (cells_above_max_z * self._fuel_map.cell_size)
+
+        # FIXME:
+        # new_fds_file.z_end = self._tbl_max + (cells_above_max_z * self._fuel_map.cell_size)
+        new_fds_file.z_end = 20
 
         ign_pts_and_times = self.convert_fire_lines(fire_lines)
 

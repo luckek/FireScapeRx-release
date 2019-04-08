@@ -7,7 +7,6 @@ from PyQt5.QtWidgets import QApplication
 
 sys.path.append(os.path.abspath('../gui'))
 
-
 from MainWindow import MainWindow
 
 

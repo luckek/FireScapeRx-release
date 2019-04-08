@@ -2,11 +2,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QScrollArea
-
-from mpl_toolkits.mplot3d import Axes3D
-
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+from mpl_toolkits.mplot3d import Axes3D
 
 
 class Visualization(QScrollArea):
@@ -24,15 +22,11 @@ class Visualization(QScrollArea):
         # this is the Canvas Widget that displays the `figure`
         # it takes the `figure` instance as a parameter to __init__
         self.canvas = FigureCanvas(self.figure)
+        self.plot()
 
         # this is the Navigation widget
         # it takes the Canvas widget and a parent
         self.toolbar = NavigationToolbar(self.canvas, self)
-
-        # Just some button connected to `plot` method
-        self.button = QPushButton('Plot')
-        self.button.clicked.connect(self.plot)
-        self.button.click()
 
         # set the layout
         layout = QVBoxLayout()
@@ -40,11 +34,11 @@ class Visualization(QScrollArea):
         layout.addWidget(self.canvas)
         self.setLayout(layout)
 
-        self.setGeometry(QtCore.QRect(10, 60, 822, 800))
+        self.setGeometry(QtCore.QRect(10, 120, 820, 800))
 
     def plot(self):
 
-        ''' plot some random stuff '''
+        """ plot given data """
 
         # random data
         X, Y, Z, colors = self.make_data_and_colors()
@@ -56,10 +50,8 @@ class Visualization(QScrollArea):
         ax = self.figure.gca(projection='3d')
 
         # plot data
-        ax.plot_surface(X, Y, Z, facecolors=colors, edgecolors='k', lw=0)
+        ax.plot_surface(X, Y, Z, facecolors=colors, edgecolors='k', lw=0, alpha=1.0)
         ax.view_init(elev=48, azim=-91)
-
-        # ax.
 
         # refresh canvas
         self.canvas.draw()
@@ -85,6 +77,16 @@ class Visualization(QScrollArea):
         # Create an empty array of strings with the same shape as the meshgrid, and
         # populate it with two colors in a checkerboard pattern.
         colortuple = ('grey', 'green', 'black')
+
+        # TODO:
+        # fuel_colors = FuelMapViewer.colors()
+
+        # fuel_colors = [x.getRgb()[:3] for x in fuel_colors]
+
+        # for name in fuel_colors:
+        #     if name is 'grey':
+        #         colortuple.append('g')
+        #
 
         colors = np.empty(X.shape, dtype=object)
         for y in range(ylen):

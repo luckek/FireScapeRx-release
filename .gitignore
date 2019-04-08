@@ -1,6 +1,28 @@
-*.ini
-*.sim_settings
+# Ignore everything(files and directories)
+*
+
+# Do not ignore files with extensions
+!*.*
+
+# Do not ignore directories
+!*/
 
 .idea
+*.txt
+*.pyc
+*.ini
+*.iso
+*.sf
+*.bf
+*.csv
+*.out
+*.sinfo
+*.binfo
+*.end
+*.smv
+*.sim_settings
+*.log
+*.bak
+*.o
+
 __pycache__
-temp

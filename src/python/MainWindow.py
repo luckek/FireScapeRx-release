@@ -3,18 +3,17 @@
 # fl = fuel
 # smv = smokeview
 
+
 import logging as logger
 import os
 import os.path as osp
 import sys
-import time
 
+import time
 from PyQt5 import Qt
-from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QMainWindow, QFileDialog, QMessageBox, qApp, QGraphicsView, QGridLayout, QWidget
 
 sys.path.append(os.path.abspath('../gui'))
-
 import Utility as util
 from AboutDialog import AboutDialog
 from AsciiParser import *
@@ -27,12 +26,10 @@ from SimulationSettings import SimulationSettings
 from UserSettingsForm import UserSettingsForm, UserSettings
 from Visualization import *
 from Ui_MainWindow import Ui_MainWindow
+from PyQt5.QtWidgets import QWidget, QLabel
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
-
-    # Path to pre-packaged smv executable
-    smv_exec = osp.join(osp.abspath(os.pardir), 'smokeview_linux_64')
 
     def __init__(self):
 
@@ -43,6 +40,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # Center main application window
         util.center_window(self)
+
+        # Disable resizing
+        self.setFixedSize(self.size())
 
         # TODO: init editor with no file here?
         # Create the fuel map editor variable
@@ -55,16 +55,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.action_export_dem.setEnabled(False)
         self.action_export_summary_file.setEnabled(False)
         self.action_export_environment.setEnabled(False)
+        self.action_create_environment.setEnabled(False)
 
+        self._sim_settings_tab.setEnabled(False)
         self._fl_type_lgnd_tab.setEnabled(False)
         self.ignition_point_legend_tab.setEnabled(False)
-        self._sim_settings_tab.setEnabled(False)
-
-        self._tab_widget.currentChanged.connect(self.__tab_changed)
-
-        # FIXME: re-enable when this gets implemented:
-        self.action_import_summary_file.setEnabled(False)
-        self.action_create_environment.setEnabled(False)
 
         # Hide and reset progress bar
         self.__hide_and_reset_progress()
@@ -77,12 +72,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # self._y_rng_min_fl_line_edit.returnPressed.connect(self.__y_rng_ret_pressed())
         # self._y_rng_max_fl_line_edit.returnPressed.connect(self.__y_rng_ret_pressed())
 
-        self.modify_fuel_map_button.clicked.connect(self.__modify_fuel_map)
-        self.modify_ign_pts_button.clicked.connect(self.__modify_ignition_map)
-
         # Initialize fds object
         self._fds = Fds()
-        self._fds_exec = self._fds.fds_exec
+
+        # Initialize smv_file to be None
+        self._smv_file = None
 
         # Setup and hide the fuel type legend grid
         self._fl_type_grid_layout_widget = QWidget(self)
@@ -100,8 +94,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Initialize selected output file types
         self._output_file_types = []
 
-        # Initialize fds_file to be None
-        self._smv_file = None
+        # Set tab widget to sim settings tab
+        self._tab_widget.setCurrentIndex(0)
+
+        self._tab_widget.currentChanged.connect(self.__tab_changed)
+
+        self.modify_fuel_map_button.clicked.connect(self.__modify_fuel_map)
+        # self.modify_ign_pts_button.clicked.connect(self.__modify_ignition_map)
 
         for child in self._menu_bar.children():
             if type(child) is QtWidgets.QMenu:
@@ -125,32 +124,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.__import_environment()
             return
 
-        elif identifier == 'action_import_simulation':
-            print(identifier, 'not implemented')
-            return
-
         elif identifier == 'action_import_fuel_map':
             self.__import_fuel_map()
             return
 
         elif identifier == 'action_import_dem':
             self.__import_dem()
-            return
-
-        elif identifier == 'action_export_summary':
-            print(identifier, 'not implemented')
-            return
-
-        elif identifier == 'action_export_environment':
-            print(identifier, 'not implemented')
-            return
-
-        elif identifier == 'action_export_simulation':
-            print(identifier, 'not implemented')
-            return
-
-        elif identifier == 'action_export_summary':
-            print(identifier, 'not implemented')
             return
 
         elif identifier == 'action_export_fuel_map':
@@ -165,31 +144,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         elif identifier == 'action_view_sim':
 
-            user_settings = UserSettings()
-
-            # Open FileDialog in user's current working directory, with smv file filter
-            file, file_filter = QFileDialog.getOpenFileName(self, 'View Simulation', user_settings.working_dir,
-                                                            filter="smv (*.smv)")
-
-            if file:
-                self._smv_file = file
-
-            if self._smv_file is not None:
-                logger.log(logger.INFO, 'Launching smokeview')
-                self.__run_smv()
-
             # We do not care about return value of QMessageBox
+            self.__view_simulation()
             return
 
-        elif identifier == 'action_user_settings':
+        elif identifier == 'action_user_setting':
             dialog = UserSettingsForm()
 
         elif identifier == 'action_select_output_files':
             dialog = SelectOutputFileTypesForm()
             self._output_file_types = dialog.get_file_types()
-
-            # Dialog will run itself, so we can return.
-            return
+            return  # Dialog will run itself, so we can return.
 
         elif identifier == 'action_about':
             dialog = AboutDialog()
@@ -338,11 +303,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # Set current tab to fuel type legend
             self._tab_widget.setCurrentIndex(1)
 
+            self._fm_title_label.setText("Fuel Map Title: " + util.get_filename(file))
+
             # Tab index might not change, so __tab_changed will never get called
             self._fl_map_editor.show()
             qApp.restoreOverrideCursor()
-
-            QMessageBox.information(self, "Import successful", "Fuel Map successfully imported.")
 
     def __export_fuel_map(self):
 
@@ -399,10 +364,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # Set current tab to fuel type legend
             self._tab_widget.setCurrentIndex(2)
 
+            self._dem_title_label.setText("DEM Title: " + util.get_filename(file))
+
             self._ign_pt_editor.show()
             qApp.restoreOverrideCursor()
-
-            QMessageBox.information(self, "Import successful", "Digital Elevation Model successfully imported.")
 
     def __export_dem(self):
 
@@ -417,7 +382,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if not file.endswith(AsciiParser.FILE_EXT):
                 file += AsciiParser.FILE_EXT
 
-            self._ign_pt_editor.save(file, False)
+            self._ign_pt_editor.save(file)
             qApp.restoreOverrideCursor()
             QMessageBox.information(self, "Export successful", "Digital elevation model successfully exported")
 
@@ -431,8 +396,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # Initialize fields with simulation settings values
             self._sim_duration_line_edit.setText(str(sim_settings.sim_duration))
-            self._wind_speed_line_edit.setText(str(sim_settings.wind_speed))
-            self._wind_direction_line_edit.setText(str(sim_settings.wind_direction))
+            self._wind_speed_line_edit.setText(str(sim_settings.wind_vel))
             self._ambient_temp_line_edit.setText(str(sim_settings.ambient_temp))
 
     @QtCore.pyqtSlot(int, name='__tab_changed')
@@ -518,8 +482,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.information(self, 'No Environment Present',
                                     '<html>No Environment Present!<br>Please create or import an environment.</html>')
 
-            # We do not care about return value of QMessageBox
+    def __view_simulation(self):
+
+        user_settings = UserSettings()
+        smv_exec = user_settings.wfds_exec
+
+        if not smv_exec:
+            QMessageBox.information(self, "No executable found", "No Smokeview executable found! please specify one in "
+                                                                 "the User Settings menu")
             return
+
+        # Open FileDialog in user's current working directory, with smv file filter
+        file, file_filter = QFileDialog.getOpenFileName(self, 'View Simulation', user_settings.working_dir,
+                                                        filter="smv (*.smv)")
+
+        if file:
+            self._smv_file = file
+
+            if self._smv_file is not None:
+                logger.log(logger.INFO, 'Launching smokeview')
+                self.__run_smv()
 
     def __environment_present(self):
         return self._fds.file_present()
@@ -585,11 +567,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         user_settings = UserSettings()
         smv_exec = user_settings.smv_exec
 
-        if not smv_exec:
-            QMessageBox.information(self, "No executable found", "No Smokeview executable found! please specify one in "
-                                                                 "the User Settings menu")
-            return
-
         logger.log(logger.INFO, 'Viewing simulation')
         util.execute(cmd=[smv_exec, self._smv_file], cwd=None, out_file=None)
 
@@ -601,6 +578,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         fds_pid = util.execute(cmd=cmd, cwd=out_dir, out_file=out_file)
 
         t_end = float(self._fds.sim_time())
+        # self._progress_bar.setFormat("%p% ({0}s / {1}s)".format(0, t_end)) # Initialize the progress bar format
 
         # Make progress bar visible
         self._progress_bar.show()
@@ -634,13 +612,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         # Figure out percentage and update progress bar
                         loading = (sim_time_float / t_end) * 100
                         self._progress_bar.setValue(loading)
+
+                        # self._progress_bar.setFormat("%p% ({0}s / {1}s)".format(sim_time_float, t_end))
+
                 wait = False
 
             except FileNotFoundError:
                 logger.log(logger.INFO, 'Sleep')
                 qApp.processEvents()  # Helps keep gui responsive
                 time.sleep(0.1)
-
 
         # TODO: could get pid from popen and check it or something here.
         # May also be useful to get pid for things such as killing if FireScape Rx is
@@ -963,29 +943,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def __check_wind(self):
 
         wind_speed = self._wind_speed_line_edit.text()
-        wind_dir = self._wind_direction_line_edit.text()
 
-        if not wind_speed or not wind_dir:
+        if not wind_speed:
             QMessageBox.information(self, "Blank Field",
-                                    "At least one of wind speed or wind direction is empty. "
-                                    "Please provide a valid value")
+                                    "Wind speed is empty. Please provide a valid value")
 
-        if not util.is_number(wind_speed) or not util.is_number(wind_dir):
+        if not util.is_number(wind_speed):
             QMessageBox.information(self, "Invalid number",
-                                    "At least one of wind speed or wind direction is not a valid number. "
-                                    "Please enter a valid number")
+                                    "Wind speed is not a valid number. Please enter a valid number")
 
             return False
 
         wind_speed = float(wind_speed)
-        wind_dir = float(wind_dir)
-
-        if wind_dir < 0.0 or wind_dir > 360.0:
-            QMessageBox.information(self, "Invalid wind direction",
-                                    "Wind direction must be between 0 and 360. "
-                                    "Please enter a valid wind direction")
-
-            return False
 
         if wind_speed < 0.0:
             QMessageBox.information(self, "Invalid wind speed",
@@ -1023,33 +992,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         fl_map_parser = self._fl_map_editor.parser()
                         dem_parser = self._ign_pt_editor.parser()
 
-                        orig_xll = fl_map_parser.xllcorner
-                        orig_yll = fl_map_parser.yllcorner
-
-                        # TODO: fix this
-                        # Hack to ensure WFDS domain starts at zero
-                        fl_map_parser.xllcorner = 0
-                        fl_map_parser.yllcorner = 0
-
                         sim_time = float(self._sim_duration_line_edit.text())
                         ambient_temp = util.fahrenheit_to_celsius(float(self._ambient_temp_line_edit.text()))
 
                         wind_speed = util.mph_to_ms(float(self._wind_speed_line_edit.text()))
-                        wind_direction = util.met_to_vect(float(self._wind_direction_line_edit.text()))
+                        wind_direction = self._wind_direction_combo_box.currentText()
 
                         sim_settings = SimulationSettings('default.sim_settings')
 
                         sim_settings.sim_duration = sim_time
                         sim_settings.ambient_temp = ambient_temp
-                        sim_settings.wind_speed = wind_speed
+                        sim_settings.wind_vel = wind_speed
                         sim_settings.wind_direction = wind_direction
 
                         ascii_fds_converter = AsciiToFds(fl_map_parser, dem_parser, sim_settings)
                         save_success = ascii_fds_converter.save(self._fl_map_editor.values_grid(), self._ign_pt_editor.fire_lines(), file)
-
-                        # Hack to ensure WFDS domain starts at zero
-                        fl_map_parser.xllcorner = orig_xll
-                        fl_map_parser.yllcorner = orig_yll
 
                         if save_success:
 

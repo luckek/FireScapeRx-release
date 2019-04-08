@@ -1,9 +1,8 @@
 from PyQt5.QtWidgets import QGraphicsTextItem
-from numpy import asarray
-
 from AsciiParser import AsciiParser
 from Utility import center_num
 from CustomRectangle import *
+from numpy import asarray
 
 
 class AsciiGridEditor(QtWidgets.QGraphicsScene):
@@ -27,16 +26,8 @@ class AsciiGridEditor(QtWidgets.QGraphicsScene):
 
     def draw_grid(self):
 
-
-        WIDTH = 100
-        HEIGHT = 60
-
         size = 50
 
-        width = (self._nrows + 1) * WIDTH
-        height = (self._ncols + 1) * HEIGHT
-
-        self.setSceneRect(0, 0, width, height)
         self.setItemIndexMethod(QtWidgets.QGraphicsScene.NoIndex)
 
         # FIXME:
@@ -44,7 +35,7 @@ class AsciiGridEditor(QtWidgets.QGraphicsScene):
         # cell_size = self._ascii_parser.cell_size + 500
 
         # Rows start at min coordinate value
-        init_x_val = int(self._ascii_parser.xllcorner) + cell_size // 2
+        init_x_val = int(self._ascii_parser.xllcorner) + cell_size / 2
 
         # FIXME:
         current_x_val = init_x_val
@@ -63,7 +54,7 @@ class AsciiGridEditor(QtWidgets.QGraphicsScene):
             current_x_val += cell_size
 
         # Columns start at max coordinate value
-        init_y_val = int(self._ascii_parser.yllcorner) + cell_size * self._nrows - cell_size // 2
+        init_y_val = int(self._ascii_parser.yllcorner) + cell_size * self._nrows - cell_size / 2
         current_y_val = init_y_val
 
         # Setup row labels for editor

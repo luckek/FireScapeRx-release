@@ -3,7 +3,6 @@ import sys
 import os
 
 sys.path.append(os.path.abspath('../gui'))
-
 from Ui_AboutDialog import Ui_About
 
 
